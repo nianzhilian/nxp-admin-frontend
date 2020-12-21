@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>正在登录天驶系统管理后台...</title>
+		<script src="framework/jquery/1.7.2/jquery.min.js"></script>
+		<script src="framework/jquery-cookie/1.0/jquery.cookie.min.js"></script>
+		<script src="https://g.alicdn.com/dingding/dingtalk-pc-api/2.6.0/index.js"></script>
+		<script>
+			function getUrlParam(name) {
+				var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+				var r = window.location.search.substr(1).match(reg);
+				if(r != null) return unescape(r[2]);
+				return null;
+			}
+		</script>
+	</head>
+
+	<body style="text-align: center;line-height: 400px;color: #888;">
+		<!--钉钉自动登录中间页-->
+		正在登录天驶系统管理后台...
+	</body>
+	<script>
+		var pageUrl = window.location.href;
+		var pageUrlArr = [];
+		pageUrlArr = pageUrl.split(".");
+		$(document).ready(function() {
+			$.ajax({
+				url: "/nxp-admin/token/?url=" + pageUrlArr[0] + ".air-x.com.cn/admin/dinglogin.html",
+				success: function(res) {
+					if(res.flag == 0) {
+						DingTalkPC.config({
+							agentId: '53177274',
+							corpId: 'ding83f1a93bd5e9a203',
+							timeStamp: res.data.timestamp,
+							nonceStr: res.data.noncestr,
+							signature: res.data.signature,
+							jsApiList: ['device.notification.alert', 'device.notification.confirm', 'runtime.permission.requestAuthCode']
+						});
+						DingTalkPC.ready(function() {
+							DingTalkPC.runtime.permission.requestAuthCode({
+								corpId: "ding83f1a93bd5e9a203",
+								onSuccess: function(res) {
+									//console.log(res.code);
+									login(res.code);
+								},
+								onFail: function(err) {}
+
+							})
+						});
+						DingTalkPC.error(function(error) {
+							DingTalkPC.error(function(error) {
+								//alert('dd error: ' + JSON.stringify(error));
+								DingTalkPC.device.notification.alert({
+								    message: "发生错误，请按“好的”重试",
+								    title: "错误信息",//可传空
+								    buttonName: "好的",
+								    onSuccess : function() {
+								       clearToken();
+								    },
+								    onFail : function(err) {}
+								});
+							});
+						});
+
+					} else {
+						alert(res.msg);
+					}
+				}
+			});
+		});
+		
+		function clearToken() {
+			$.ajax({
+				url: '/nxp-admin/cleartoken',
+				type: 'GET'
+			}).success(function(res) {
+				dlogin();
+			});
+		}
+
+		function login(code) {
+			$.ajax({
+				url: "/nxp-admin/dingLogin/" + code,
+				success: function(res) {
+					if(res.flag == 0) {
+						var user = new Object;
+						/*
+						// 组合权限数组
+						var permInfo = [];
+
+						function permComb(data) {
+							for(var i = 0; i < data.length; i++) {
+								permInfo.push(parseInt(data[i]['code']));
+								if(data[i]['childNodes'] != null) {
+									permComb(data[i]['childNodes']);
+								}
+							}
+						}
+						permComb(res.permInfo);
+						user = {
+							loginType: 'dingding',
+							userInfo: res.userInfo,
+							permInfo: permInfo,
+							token : res.token
+						};
+						// 写入localstorage
+						var adminUser = {
+							loginType: 'dingding',
+							userInfo: res.userInfo,
+							permInfo: permInfo,
+							token : res.token
+						}
+						$.cookie('user', JSON.stringify(user));
+						*/
+						window.localStorage.setItem("user", JSON.stringify(res.data));
+						window.location.href = "/admin/#/main/index";
+					} else {
+						DingTalkPC.device.notification.alert({
+							message: res.msg,
+							title: "登录提示",
+							buttonName: "好的",
+							onSuccess: function() {},
+							onFail: function(err) {}
+						});
+						window.location.href = "/admin/#/login";
+					}
+				}
+			});
+		}
+	</script>
+
+</html>

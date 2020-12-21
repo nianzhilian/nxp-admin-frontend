@@ -1,0 +1,237 @@
+@charset "utf-8";
+/* CSS Document */
+* {
+	-webkit-tap-highlight-color: transparent;
+	outline: 0;
+	-webkit-user-select: text
+}
+html, body, div, span, p, h1, h2, h3, h4, h5, h6, em, img, strong, blockquote, sub, sup, tt, i, b, dd, dl, dt, form, label, table, caption, article, header, nav, section, aside, hgroup, figure, figcaption, footer, dialog, tbody, tfoot, thead, tr, th, td, ul, li, p, a, ol {
+	margin: 0;
+	padding: 0;
+	font-weight: 500;
+	border: 0;
+	vertical-align: baseline;
+	word-wrap: break-word;
+}
+*, :after, :before {
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
+	word-wrap: break-word;
+	word-break: break-all
+}
+body, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, p, form, input, textarea, article, aside, details, figcaption, figure, footer, header, hgroup, main, menu, nav, section, summary, button {
+	margin: 0;
+	padding: 0;
+	vertical-align: baseline;
+}
+img {
+	border: 0 none;
+	vertical-align: top
+}
+i, em {
+	font-style: normal
+}
+ol, ul {
+	list-style: none
+}
+article, aside, details, figcaption, figure, footer, header, hgroup, main, menu, nav, section, summary {
+	display: block
+}
+body {
+	-ms-text-size-adjust: 100%;
+	margin: 0 auto;
+	background: #fff;
+	font-size: 14px;
+	font-family: Microsoft YaHei, Helvetica, STHeiti STXihei, Microsoft JhengHei, Arial;
+	line-height: 1.5;
+	color: #666;
+	-webkit-user-select: none;
+	-webkit-text-size-adjust: none;
+	-webkit-overflow-scrolling: touch;
+	-webkit-text-size-adjust: 100% !important
+}
+body, html {
+	font-family: "Microsoft YaHei","微软雅黑",arial,simsun,"宋体";
+}
+h1, h2, h3, h4, h5, h6 {
+	font-weight: normal
+}
+input, img {
+	vertical-align: middle;
+}
+a:link, a:visited {
+	text-decoration: none;
+	color: #333;
+}
+a, li, input, button, section, span, div {
+	-webkit-tap-highlight-color: rgba(0,0,0,0);
+	tap-highlight-color: rgba(0,0,0,0)
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0
+}
+input, textarea {
+	-webkit-appearance: none;
+	outline: 0
+}
+button {
+	border: 0;
+	outline: 0
+}
+.fl{
+	float: left;
+}
+.fr{
+	float: right;
+}
+.pdl15{
+	padding-left: 15px;
+}
+.pdr15{
+	padding-right: 15px;
+}
+.clearit {
+	clear: both;
+	width: 0;
+	height: 0;
+	font-size: 0;
+	line-height: 0;
+	overflow: hidden;
+	visibility: hidden;
+}
+.fix {
+ *zoom: 1;
+}
+.fix:after {
+	display: block;
+	content: "clear";
+	height: 0;
+	clear: both;
+	overflow: hidden;
+	visibility: hidden;
+}
+.tac{
+	text-align: center;
+}
+.tal{
+	text-align: left;
+}
+.f1rem{
+	font-size: .4rem;
+}
+div[line="1"] {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: -webkit-box;
+	-webkit-line-clamp: 1;
+	-webkit-box-orient: vertical
+}
+div[line="2"] {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical
+}
+div[line="3"] {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical
+}
+div[space="0"] {
+	margin-bottom: 0
+}
+div[space="6"] {
+	height: 6px;
+	background: #f0f0f0;
+}
+div[space="10"] {
+	margin-bottom: 10px
+}
+div[space="15"] {
+	margin-bottom: 15px
+}
+div[h-50="50"] {
+	height: 50px;
+}
+div[rem-h="7"], a[rem-h="7"] {
+	height: 7rem;
+}
+
+.pos_relative {
+	position: relative;
+}
+.pos_absolute {
+	position: absolute;
+}
+
+
+.upload_loading_wrap .mask{
+    position:fixed;
+    width: 100%;
+    height:100%;
+    top: 0;
+    bottom: 0;
+    background: #000;
+    opacity: .5;
+    z-index: 9998;
+    left:0;
+}
+.upload_loading_wrap .load_pos{
+    position: fixed;
+    width: 140px;
+    height: 100px;
+    top: 16%;
+    left: 50%;
+    margin-top:-25px;
+    margin-left: -70px;
+    z-index: 10000
+}
+.upload_loading_wrap .load_txt{
+    background: #fff;
+    border-radius: 3px;
+    color: #666;
+    border: 1px solid #d1d1d1;
+    text-align: center;
+    padding: 5px 10px;
+}
+.load4 .loader {
+    animation: 1.3s linear 0s normal none infinite running load4;
+    border-radius: 50%;
+    font-size: 20px;
+    height: 1em;
+    margin: 5em auto;
+    position: relative;
+    text-indent: -9999em;
+    width: 1em;
+}
+@keyframes load4 {
+0%, 100% {
+    box-shadow: 0 -3em 0 0.2em #ffffff, 2em -2em 0 0 #ffffff, 3em 0 0 -0.5em #ffffff, 2em 2em 0 -0.5em #ffffff, 0 3em 0 -0.5em #ffffff, -2em 2em 0 -0.5em #ffffff, -3em 0 0 -0.5em #ffffff, -2em -2em 0 0 #ffffff;
+}
+12.5% {
+    box-shadow: 0 -3em 0 0 #ffffff, 2em -2em 0 0.2em #ffffff, 3em 0 0 0 #ffffff, 2em 2em 0 -0.5em #ffffff, 0 3em 0 -0.5em #ffffff, -2em 2em 0 -0.5em #ffffff, -3em 0 0 -0.5em #ffffff, -2em -2em 0 -0.5em #ffffff;
+}
+25% {
+    box-shadow: 0 -3em 0 -0.5em #ffffff, 2em -2em 0 0 #ffffff, 3em 0 0 0.2em #ffffff, 2em 2em 0 0 #ffffff, 0 3em 0 -0.5em #ffffff, -2em 2em 0 -0.5em #ffffff, -3em 0 0 -0.5em #ffffff, -2em -2em 0 -0.5em #ffffff;
+}
+37.5% {
+    box-shadow: 0 -3em 0 -0.5em #ffffff, 2em -2em 0 -0.5em #ffffff, 3em 0 0 0 #ffffff, 2em 2em 0 0.2em #ffffff, 0 3em 0 0 #ffffff, -2em 2em 0 -0.5em #ffffff, -3em 0 0 -0.5em #ffffff, -2em -2em 0 -0.5em #ffffff;
+}
+50% {
+    box-shadow: 0 -3em 0 -0.5em #ffffff, 2em -2em 0 -0.5em #ffffff, 3em 0 0 -0.5em #ffffff, 2em 2em 0 0 #ffffff, 0 3em 0 0.2em #ffffff, -2em 2em 0 0 #ffffff, -3em 0 0 -0.5em #ffffff, -2em -2em 0 -0.5em #ffffff;
+}
+62.5% {
+    box-shadow: 0 -3em 0 -0.5em #ffffff, 2em -2em 0 -0.5em #ffffff, 3em 0 0 -0.5em #ffffff, 2em 2em 0 -0.5em #ffffff, 0 3em 0 0 #ffffff, -2em 2em 0 0.2em #ffffff, -3em 0 0 0 #ffffff, -2em -2em 0 -0.5em #ffffff;
+}
+75% {
+    box-shadow: 0 -3em 0 -0.5em #ffffff, 2em -2em 0 -0.5em #ffffff, 3em 0 0 -0.5em #ffffff, 2em 2em 0 -0.5em #ffffff, 0 3em 0 -0.5em #ffffff, -2em 2em 0 0 #ffffff, -3em 0 0 0.2em #ffffff, -2em -2em 0 0 #ffffff;
+}
+87.5% {
+    box-shadow: 0 -3em 0 0 #ffffff, 2em -2em 0 -0.5em #ffffff, 3em 0 0 -0.5em #ffffff, 2em 2em 0 -0.5em #ffffff, 0 3em 0 -0.5em #ffffff, -2em 2em 0 0 #ffffff, -3em 0 0 0 #ffffff, -2em -2em 0 0.2em #ffffff;
+}
+}

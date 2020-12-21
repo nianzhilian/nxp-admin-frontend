@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>打印</title>
+		<script src="/framework/jquery/1.7.2/jquery.min.js"></script>
+		<link rel="stylesheet" href="/framework/bootstrap/3.3.7/css/bootstrap.min.css" />
+		<script>
+			// 获取浏览器参数
+			var getParam = function(name) {
+				var search = document.location.search;
+				var pattern = new RegExp("[?&]" + name + "\=([^&]+)", "g");
+				var matcher = pattern.exec(search);
+				var items = null;
+				if(null != matcher) {
+					try {
+						items = decodeURIComponent(decodeURIComponent(matcher[1]));
+					} catch(e) {
+						try {
+							items = decodeURIComponent(matcher[1]);
+						} catch(e) {
+							items = matcher[1];
+						}
+					}
+				}
+				return items;
+			};
+			// 时间转换
+			var myTime = {
+				CurTime: function() {
+					return Date.parse(new Date()) / 1000;
+				},
+				DateToUnix: function(string) {
+					var f = string.split(' ', 2);
+					var d = (f[0] ? f[0] : '').split('-', 3);
+					var t = (f[1] ? f[1] : '').split(':', 3);
+					return(new Date(parseInt(d[0], 10) || null, (parseInt(d[1], 10) || 1) - 1, parseInt(d[2], 10) || null, parseInt(t[0], 10) || null, parseInt(t[1], 10) || null, parseInt(t[2], 10) || null)).getTime() / 1000;
+				},
+				UnixToDate: function(unixTime, isFull, timeZone) {
+					if(typeof(timeZone) == 'number') {
+						unixTime = parseInt(unixTime) + parseInt(timeZone) * 60 * 60;
+					}
+					var time = new Date(unixTime * 1000);
+					var ymdhis = "";
+					ymdhis += time.getUTCFullYear() + "-";
+					ymdhis += (time.getUTCMonth() + 1) + "-"
+					ymdhis += time.getUTCDate();
+					if(isFull === true) {
+						ymdhis += " " + time.getUTCHours() + ":";
+						ymdhis += time.getUTCMinutes() + ":";
+						ymdhis += time.getUTCSeconds();
+					}
+					return ymdhis;
+				}
+			};
+			var pjMessage = function(pjMessage) {
+				if(pjMessage == 'A') {
+					return '原厂件(A)';
+				} else if(pjMessage == 'B') {
+					return '品牌配套(B)';
+				} else if(pjMessage == 'C') {
+					return '品牌(C)';
+				} else if(pjMessage == 'D') {
+					return '改装/代用(D)';
+				} else if(pjMessage == 'E1') {
+					return '拆车(E1)'
+				} else if(pjMessage == 'E2') {
+					return '拆机(E2)'
+				} else if(pjMessage == 'E3') {
+					return '下线(E3)'
+				} else {
+					return '再制造(E4)'
+				}
+			}
+			// 格式化金额
+			function fmoney(s, n) {
+				n = n > 0 && n <= 20 ? n : 2;
+				s = parseFloat((s + '').replace(/[^\d\.-]/g, '')).toFixed(n) + '';
+				var l = s.split('.')[0].split('').reverse(),
+					r = s.split('.')[1];
+				var t = '';
+				for(var i = 0; i < l.length; i++) {
+					t += l[i] + ((i + 1) % 3 == 0 && (i + 1) != l.length ? ',' : '');
+				}
+				return t.split('').reverse().join('') + '.' + r;
+			}
+			// 生成表格
+			function pjlist(thead, tbody) {
+				var tempstr = '';
+				var table = '';
+				// 生成head
+				var head = '';
+				for(var a = 0; a < thead.length; a++) {
+					if(thead[a]['ordertype'].indexOf(dataType) > -1) {
+						if(thead[a]['type']=='number' || thead[a]['type']=='money') {
+							head += '<th class="text-right">' + thead[a]['name'] + '</th>';
+						} else {
+							head += '<th>' + thead[a]['name'] + '</th>';
+						}
+					}
+				}
+				head = '<thead>' + head + '</thead>'
+				// 生成body
+				var body = '';
+				for(var i = 0; i < tbody.length; i++) {
+					var rowbody = '';
+					for(var j = 0; j < thead.length; j++) {
+						if(tbody[i][thead[j]['id']] == undefined || tbody[i][thead[j]['id']] == null) {
+							tempstr = "";
+						} else {
+							tempstr = tbody[i][thead[j]['id']];
+						}
+						if(thead[j]['ordertype'].indexOf(dataType) > -1) {
+							if(thead[j]['id']=='#') {
+								rowbody += '<td>' + (i+1) + '</td>';
+							} else if(thead[j]['type']=='number') {
+								rowbody += '<td class="text-right">' + tempstr + '</td>';
+							} else if(thead[j]['type']=='money') {
+								rowbody += '<td class="text-right">' + fmoney(tempstr) + '</td>';
+							} else if(thead[j]['fname']=='cateorg') {
+								rowbody += '<td>' + pjMessage(tempstr) + '</td>';
+							} else if(thead[j]['fname']=='category') {
+								rowbody += '<td>' + pjMessage(tempstr) + '</td>';
+							} else {
+								rowbody += '<td>' + tempstr + '</td>';
+							}
+						}
+					}
+					body += '<tr>' + rowbody + '</tr>';
+				}
+				rowbody = "";
+				// 生成合计值
+				for(var a = 0; a < thead.length; a++) {
+					if(thead[a]['ordertype'].indexOf(dataType) > -1) {
+						rowbody +=  '<td class="text-right">' + thead[a]['amount'] + '</td>';
+					}
+				}
+				body += '<tr>' + rowbody + '</tr>';
+				body = '<tbody>' + body + '</tbody>';
+				table = '<table class="table table-bordered">' + head + body + '</table>';
+				$("#pjlist").html(table);
+			}
+			// window.onload
+			$(document).ready(function() {
+				window.user =JSON.parse(localStorage.getItem('user'));
+				window.dataType = getParam('orderId').substr(0, 3);
+				$.ajax({
+					url: "/nxp-admin/order/info/" + getParam('orderId'),
+					headers: {
+						'token': user.token,
+						
+					},
+					success: function(res) {
+						if(res.flag == 0) {
+							// 订单信息
+							$("#orderNo").html(res.data.orderNo);
+							$("#launchName").html(res.data.launchName == undefined ? res.data.orgFullName : res.data.launchName);
+							$("#xlcFullName").html(res.data.xlcFullName);
+							if((res.data.factory == ''||res.data.factory == null||res.data.factory == undefined)&&res.data.vehicleType==2) {
+								$("#factory").html(res.data.carNote);
+							} else if(res.data.factory != ''&&res.data.factory != null&&res.data.factory != undefined&&res.data.vehicleType==2){
+								$("#factory").html(res.data.factory + '-' + res.data.brand + '-' + res.data.year + '-' + res.data.model + "-" + res.data.saleName);
+							}else if(res.data.vehicleType==1){
+								$("#factory").html(res.data.vehicleName);
+							}
+							$("#vin").html(res.data.vin);
+							$("#recordCode").html(res.data.recordCode);
+							$("#numberReport").html(res.data.numberReport);
+							$("#numberPlates").html(res.data.numberPlates);
+							$("#insurer").html(res.data.insurer);
+							$("#orgAddress").html(res.data.orgAddress);
+							$("#xlcAddress").html(res.data.xlcAddress);
+							$('#quotationPrice').html(fmoney(res.data.price));
+							$("#receiverName").html(res.data.receiverName);
+							$("#receiverPhone").html(res.data.receiverPhone);
+							$("#createUserName").html(res.data.createUserName);
+							$("#createUserPhone").html(res.data.createUserPhone);
+							$("#receiverPhone").html(res.data.receiverPhone);
+							$("#saName").html(res.data.saName);
+							$("#saPhone").html(res.data.saPhone);
+							$("#bjName").html(res.data.bjName);
+							$("#bjPhone").html(res.data.bjPhone);
+							// 只有换货的发货和发货才显示支付方式
+							if(getParam('type')=='send'||getParam('type')=='changeSend'){
+                                $("#payTypeBox").show();
+                                if(res.data.isCod == 1) {
+                                    $("#payType").html("货到付款");
+                                } else if (res.data.payType == 0) {
+                                    $("#payType").html("已付款");
+                                } else {
+                                    $("#payType").html("月结");
+                                }
+                            }
+							// 是物流还是退货
+							if(getParam('type') == 'print' || getParam('type') == 'send') {
+								loadInfo();
+							} else if(getParam('type') == 'return') {
+								returnLoadInfo();
+							} else if(getParam('type') == 'changePrint' || getParam('type') == 'changeSend') {
+								changeSendLoadInfo();
+							} else if(getParam('type') == 'changeReturn') {
+								changeReturnLoadInfo();
+							}
+							// 发货提示
+							if(getParam("sendType") == 0) {
+								$('#sendType').html('提示：该定单定货周期栏有“定货时间标注的配件”为非现货供应配件，即期货定货配件，为供应商应采购方特别定购，采购方承诺：“无质量问题不退货，并承担该定单期货配件的付款责任”。<br />天驶客服电话：010-52202926-803');
+							} else if(getParam("sendType") == 1) {
+								$('#sendType').html('提示：该定单定货周期栏有“定货时间标注的配件”为非现货供应配件，即期货定货配件，为供应商应采购方特别定购，采购方承诺：“无质量问题不退货，并承担该定单期货配件的付款责任”。<br />天驶客服电话：010-52202926-803');
+							} else if(getParam("sendType") == 2) {
+								$('#sendType').html('提示：该定单定货周期栏有“定货时间标注的配件”为非现货供应配件，即期货定货配件，为供应商应采购方特别定购，采购方承诺：“无质量问题不退货，并承担该定单期货配件的付款责任”。<br />天驶客服电话：010-52202926-803');
+							} else if(getParam("sendType") == 3) {
+								$('#sendType').html('提示：该定单定货周期栏有“定货时间标注的配件”为非现货供应配件，即期货定货配件，为供应商应采购方特别定购，采购方承诺：“无质量问题不退货，并承担该定单期货配件的付款责任”。<br />天驶客服电话：010-52202926-803');
+							}
+							// End 发货提示
+						}
+					}
+				});
+				// ==========>>发货的数据
+				function loadInfo() {
+					$(".typeStr").html("配送");
+					$("#sendAccept").html('<br />验收确认说明：<br />1、对于能够验收确认的配件，请在"验收确认"处划勾确认，即代表客户对配件品质和数量的验收认可；<br />2、对于需要退货的配件，请在"验收确认"处写上"退"来确认退货；<br />3、对于需要换货（不涉及价格变动）的配件，请在“验收确认”处写上“换”来确认换货；<br />4、对于涉及到价格变动（品类调换，品牌调换等等）换货的配件，请在“验收确认”处写上“退+”来确认价格变动的换货。')
+					$.ajax({
+						url: "/nxp-logistics/admin/airinfo",
+						headers: {
+							'token': user.token,
+							'Content-Type': 'application/json;charset=utf-8'
+						},
+						data:JSON.stringify({
+							orderId:getParam('orderId')
+						}),
+						type: 'POST',
+						success: function(res) {
+							for(var i = 0; i < res.data['logistics'].length; i++) {
+								if(res.data['logistics'][i]['logisticsId'] == getParam('wuliu')) {
+									// 订单号、发货时间
+									$('#orderNumber').html(res.data['logistics'][i]['logisticsNo']);
+									$("#myDate").html(res.data['logistics'][i]['lastOpTime']);
+									// 计算合计值
+									var totalPrice = 0;
+									var manageCostTotal = 0;
+									for(var j = 0; j < res.data['logistics'][i]['infoList'].length; j++) {
+										// 计算单子合计金额
+										totalPrice += parseFloat(res.data['logistics'][i]['infoList'][j].amount * 1000);
+										// 计算单子合计管理费
+										manageCostTotal += parseFloat((res.data['logistics'][i]['infoList'][j].manageCost * 1000));
+										if(res.data['logistics'][i]['infoList'][j].cycleDate == '' || res.data['logistics'][i]['infoList'][j].cycleDate == undefined || res.data['logistics'][i]['infoList'][j].cycleDate == null) {
+											res.data['logistics'][i]['infoList'][j].cycleDate = '';
+										}
+										if(res.data['logistics'][i]['infoList'][j].remark == '' || res.data['logistics'][i]['infoList'][j].remark == undefined || res.data['logistics'][i]['infoList'][j].remark == null) {
+											res.data['logistics'][i]['infoList'][j].remark = '';
+										}
+									}
+									// 生成详细表格
+									var thead = [{
+										id: '#',
+										name: '序号',
+										type: '',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'name',
+										name: '配件名称',
+										type: '',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'oenum',
+										name: 'OE码',
+										type: '',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'brand',
+										name: '配件品牌',
+										type: '',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'unit',
+										name: '单位',
+										type: '',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'price',
+										name: '单价',
+										type: 'money',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'num',
+										name: '数量',
+										type: 'number',
+										ordertype: ['INS','XLC'],
+										amount: '配送单总金额'
+									}, {
+										id: 'amount',
+										name: '总价',
+										type: 'money',
+										ordertype: ['INS','XLC'],
+										amount: fmoney(totalPrice / 1000)
+									}, {
+										id: 'manageCost',
+										name: '管理费',
+										type: 'money',
+										ordertype: ['INS'],
+										amount: fmoney(manageCostTotal / 1000)
+									}, {
+										id: 'cycleDate',
+										name: '定货周期',
+										type: '',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'remark',
+										name: '备注',
+										type: '',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'accept',
+										name: '验收确认',
+										type: '',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}];
+									pjlist(thead, res.data['logistics'][i]['infoList']);
+									// End 生成表格
+									// 第三方物流显示
+									if(res.data['logistics'][i]['otherLogisticsNo'] || res.data['logistics'][i]['otherLogisticsPhone'] || res.data['logistics'][i]['otherLogisticsCompanyName']) {
+										$("#otherLogistics").html("承运商名称："+res.data['logistics'][i]['otherLogisticsCompanyName']+"&nbsp;&nbsp;&nbsp;&nbsp;承运商联系方式："+res.data['logistics'][i]['otherLogisticsPhone']+"&nbsp;&nbsp;&nbsp;&nbsp;运单号："+res.data['logistics'][i]['otherLogisticsNo'])
+									}
+								}
+							}
+							setTimeout("window.print();", 500);
+						}
+					});
+				}
+				// ==========>>退货的数据
+				function returnLoadInfo() {
+					$(".typeStr").html("退货");
+					$.ajax({
+						url: "/nxp-admin/retord/orderInfo/" + getParam('wuliu'),
+						headers: {
+							'token': user.token
+						},
+						type: 'GET',
+						success: function(res) {
+									// 第三方物流显示
+									if(res.data['otherLogisticsNo'] || res.data['otherLogisticsPhone'] || res.data['otherLogisticsCompanyName']) {
+										$("#otherLogistics").html("承运商名称："+res.data['otherLogisticsCompanyName']+"承运商联系方式："+res.data['otherLogisticsPhone']+"运单号："+res.data['otherLogisticsNo'])
+									}
+									// 订单号、发货时间
+									$('#orderNumber').html(res.data['retOrdNo']);
+									$("#myDate").html(myTime.UnixToDate(res.data['createTime']/1000, true, 8));
+									// 计算合计值
+									var totalPrice = 0;
+									var manageCostTotal = 0;
+									for(var j = 0; j < res.data['infoList'].length; j++) {
+										// 合计价格
+										totalPrice += parseFloat(res.data['infoList'][j].amountReturn * 1000);
+										// 合计管理费
+										manageCostTotal += parseFloat((res.data['infoList'][j].manageCost * 1000));
+										if(res.data['infoList'][j].cycleDate == '' || res.data['infoList'][j].cycleDate == undefined || res.data['infoList'][j].cycleDate == null) {
+											res.data['infoList'][j].cycleDate = '';
+										}
+									}
+									// 生成详细表格
+									var thead = [{
+										id: '#',
+										name: '序号',
+										type: '',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'pjName',
+										name: '配件名称',
+										type: '',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'pjOenum',
+										name: 'OE码',
+										type: '',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'pjBrand',
+										name: '配件品牌',
+										type: '',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'pjUnit',
+										name: '单位',
+										type: '',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'pjPrice',
+										name: '单价',
+										type: 'money',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'returnNumber',
+										name: '数量',
+										type: 'number',
+										ordertype: ['INS','XLC'],
+										amount: '退货单总金额'
+									}, {
+										id: 'amountReturn',
+										name: '总价',
+										type: 'money',
+										ordertype: ['INS','XLC'],
+										amount: fmoney(totalPrice / 1000)
+									}, {
+										id: 'manageCost',
+										name: '管理费',
+										type: 'money',
+										ordertype: ['INS'],
+										amount: fmoney(manageCostTotal / 1000)
+									}];
+									pjlist(thead, res.data['infoList']);
+									// End 生成表格
+							setTimeout("window.print();", 500);
+						}
+					});
+				}
+				// ==========>>End 退货的数据
+
+				// ==========>>换货的退回数据
+				function changeReturnLoadInfo() {
+					$(".typeStr").html("换货退回");
+					$.ajax({
+						url: "/nxp-admin/retord/orderInfo/" + getParam('wuliu'),
+						headers: {
+							'token': user.token
+						},
+						type: 'GET',
+						success: function(res) {
+									// 第三方物流显示
+									if(res.data['otherLogisticsNo'] || res.data['otherLogisticsPhone'] || res.data['otherLogisticsCompanyName']) {
+										$("#otherLogistics").html("承运商名称："+res.data['otherLogisticsCompanyName']+"承运商联系方式："+res.data['otherLogisticsPhone']+"运单号："+res.data['otherLogisticsNo'])
+									}
+									// 订单号、发货时间
+									$('#orderNumber').html(res.data['retOrdNo']);
+									$("#myDate").html(myTime.UnixToDate(res.data['createTime']/1000, true, 8));
+									// 计算合计值
+									var totalPrice = 0;
+									var manageCostTotal = 0;
+									for(var j = 0; j < res.data['infoList'].length; j++) {
+										// 合计价格
+										totalPrice += parseFloat(res.data['infoList'][j].amountReturn * 1000);
+										// 合计管理费
+										manageCostTotal += parseFloat((res.data['infoList'][j].manageCost * 1000));
+										if(res.data['infoList'][j].cycleDate == '' || res.data['infoList'][j].cycleDate == undefined || res.data['infoList'][j].cycleDate == null) {
+											res.data['infoList'][j].cycleDate = '';
+										}
+									}
+									// 生成详细表格
+									var thead = [{
+										id: '#',
+										name: '序号',
+										type: '',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'pjName',
+										name: '配件名称',
+										type: '',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'pjOenum',
+										name: 'OE码',
+										type: '',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'pjBrand',
+										name: '配件品牌',
+										type: '',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'pjUnit',
+										name: '单位',
+										type: '',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'pjPrice',
+										name: '单价',
+										type: 'money',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'returnNumber',
+										name: '数量',
+										type: 'number',
+										ordertype: ['INS','XLC'],
+										amount: '换货退回单总金额'
+									}, {
+										id: 'amountReturn',
+										name: '总价',
+										type: 'money',
+										ordertype: ['INS','XLC'],
+										amount: fmoney(totalPrice / 1000)
+									}, {
+										id: 'manageCost',
+										name: '管理费',
+										type: 'money',
+										ordertype: ['INS'],
+										amount: fmoney(manageCostTotal / 1000)
+									}];
+									pjlist(thead, res.data['infoList']);
+									// End 生成表格
+							setTimeout("window.print();", 500);
+						}
+					});
+				}
+				// ==========>>End 换货发货的数据
+
+				// ==========>>换货发货的数据
+				function changeSendLoadInfo() {
+					$(".typeStr").html("换货发货");
+					$("#sendAccept").html('<br /><br />验收确认说明：<br />1、对于能够验收确认的配件，请在"验收确认"处划勾确认，即代表客户对配件品质和数量的验收认可；<br />2、对于需要退货的配件，请在"验收确认"处写上"退"来确认退货；<br />3、对于需要换货（不涉及价格变动）的配件，请在“验收确认”处写上“换”来确认换货；<br />4、对于涉及到价格变动（品类调换，品牌调换等等）换货的配件，请在“验收确认”处写上“退+”来确认价格变动的换货。')
+					$.ajax({
+						url: "/nxp-logistics/admin/airinfo",
+						headers: {
+							'token': user.token,
+							'Content-Type': 'application/json;charset=utf-8'
+						},data:JSON.stringify({
+							orderId:getParam('orderId')
+						}),
+						type: 'POST',
+						success: function(res) {
+							for(var i = 0; i < res.data['logistics'].length; i++) {
+								// 换货物流用returnOrderId匹配
+								if(res.data['logistics'][i]['returnOrderId'] == getParam('wuliu')) {
+									// 订单号、发货时间
+									$('#orderNumber').html(res.data['logistics'][i]['logisticsNo']);
+									$("#myDate").html(res.data['logistics'][i]['lastOpTime']);
+									// 计算合计值
+									var totalPrice = 0;
+									var manageCostTotal = 0;
+									for(var j = 0; j < res.data['logistics'][i]['infoList'].length; j++) {
+										// 计算单子合计金额
+										totalPrice += parseFloat(res.data['logistics'][i]['infoList'][j].amount * 1000);
+										// 计算单子合计管理费
+										manageCostTotal += parseFloat((res.data['logistics'][i]['infoList'][j].manageCost * 1000));
+										if(res.data['logistics'][i]['infoList'][j].cycleDate == '' || res.data['logistics'][i]['infoList'][j].cycleDate == undefined || res.data['logistics'][i]['infoList'][j].cycleDate == null) {
+											res.data['logistics'][i]['infoList'][j].cycleDate = '';
+										}
+										if(res.data['logistics'][i]['infoList'][j].remark == '' || res.data['logistics'][i]['infoList'][j].remark == undefined || res.data['logistics'][i]['infoList'][j].remark == null) {
+											res.data['logistics'][i]['infoList'][j].remark = '';
+										}
+									}
+									// 生成详细表格
+									var thead = [{
+										id: '#',
+										name: '序号',
+										type: '',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'name',
+										name: '配件名称',
+										type: '',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'oenum',
+										name: 'OE码',
+										type: '',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'brand',
+										name: '配件品牌',
+										type: '',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'unit',
+										name: '单位',
+										type: '',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'price',
+										name: '单价',
+										type: 'money',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'num',
+										name: '数量',
+										type: 'number',
+										ordertype: ['INS','XLC'],
+										amount: '换货发货单总金额'
+									}, {
+										id: 'amount',
+										name: '总价',
+										type: 'money',
+										ordertype: ['INS','XLC'],
+										amount: fmoney(totalPrice / 1000)
+									}, {
+										id: 'manageCost',
+										name: '管理费',
+										type: 'money',
+										ordertype: ['INS'],
+										amount: fmoney(manageCostTotal / 1000)
+									}, {
+										id: 'cycleDate',
+										name: '定货周期',
+										type: '',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'remark',
+										name: '备注',
+										type: '',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}, {
+										id: 'accept',
+										name: '验收确认',
+										type: '',
+										ordertype: ['INS','XLC'],
+										amount: ''
+									}];
+									pjlist(thead, res.data['logistics'][i]['infoList']);
+									// End 生成表格
+									// 第三方物流显示
+									if(res.data['logistics'][i]['otherLogisticsNo'] || res.data['logistics'][i]['otherLogisticsPhone'] || res.data['logistics'][i]['otherLogisticsCompanyName']) {
+										$("#otherLogistics").html("承运商名称："+res.data['logistics'][i]['otherLogisticsCompanyName']+"&nbsp;&nbsp;&nbsp;&nbsp;承运商联系方式："+res.data['logistics'][i]['otherLogisticsPhone']+"&nbsp;&nbsp;&nbsp;&nbsp;运单号："+res.data['logistics'][i]['otherLogisticsNo'])
+									}
+								}
+							}
+							setTimeout("window.print();", 500);
+						}
+					});
+				}
+				// ==========>>End 换货发货的数据
+			});
+		</script>
+	</head>
+
+	<body>
+		<table class="table table-bordered">
+			<thead>
+				<tr>
+					<th colspan="6" class="text-center">
+						<h4>北京天驶科贸有限责任公司（天驶汽配云）<br /><span class="typeStr">配送</span>单</h4>
+					</th>
+				</tr>
+				<tr>
+					<th colspan="6">
+						<div class="pull-left">订单号：<span id="orderNo"></span></div>
+						<div class="pull-right"><span class="typeStr">配送</span>单号：<span id="orderNumber"></span>&nbsp;&nbsp;&nbsp;&nbsp;发货时间：<span id="myDate"></span></div>
+					</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>订单发起方:</td>
+					<td><span id="launchName"></span></td>
+					<td>修理厂：</td>
+					<td><span id="xlcFullName"></span></td>
+				</tr>
+				<tr>
+					<td>车型:</td>
+					<td id='factory'></td>
+					<td>VIN码：</td>
+					<td id='vin'></td>
+				</tr>
+				<tr>
+					<td>备案码：</td>
+					<td id='recordCode'></td>
+					<td>报案号：</td>
+					<td id='numberReport'></td>
+				</tr>
+				<tr>
+					<td>车牌号:</td>
+					<td id='numberPlates'></td>
+					<td>被保险人：</td>
+					<td id='insurer'></td>
+
+				</tr>
+				<tr>
+					<td>收货地址:</td>
+					<td><span id='orgAddress'></span><span id='xlcAddress'></span></td>
+					<td>订单总金额：</td>
+					<td id='quotationPrice'></td>
+				</tr>
+				<tr>
+					<td>收货人:</td>
+					<td id='receiverName'></td>
+					<td>手机：</td>
+					<td id='receiverPhone'></td>
+				</tr>
+				<tr>
+					<td>订单发起人:</td>
+					<td id='createUserName'></td>
+					<td>手机：</td>
+					<td id='createUserPhone'></td>
+				</tr>
+				<tr>
+					<td>维修顾问:</td>
+					<td id='saName'></td>
+					<td>手机：</td>
+					<td id='saPhone'></td>
+				</tr>
+				<tr>
+					<td>配件商联络人:</td>
+					<td id='bjName'></td>
+					<td>手机：</td>
+					<td id='bjPhone'></td>
+				</tr>
+				<tr id="payTypeBox" style="display: none;">
+					<td>收款方式:</td>
+					<td id='payType'></td>
+					<td></td>
+					<td></td>
+				</tr>
+			</tbody>
+		</table>
+		<div class="text-center">
+			<h4><span class="typeStr">配送</span>单配件明细</h4>
+		</div>
+		<div id="pjlist"></div>
+		<div id="otherLogistics" style="margin-bottom: 10px;"></div>
+		<div id="sendType"></div>
+		<div id="sendAccept"></div>
+	</body>
+
+</html>
